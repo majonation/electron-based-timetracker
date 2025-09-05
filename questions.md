@@ -19,3 +19,11 @@ Ask OpenAI with an API call in case the category is not clear.
 15. **Time Granularity**: What is the minimum time granularity for tracking (seconds, minutes, etc.)? Answer: it should round up to 10 seconds, but overall showing the hours and minutes and then seconds rounded as well
      
 
+16. **Active Application Tracking**: Should tracking capture only the foreground active application, and should it pause when the system is locked or asleep?
+17. **Chrome Tab Details**: Should tab tracking cover all Chrome windows including incognito, and is there any need to handle pinned tabs separately?
+18. **Initial CSV Format**: What columns and structure should the initial CSV file include, and where should it be stored within the application directory?
+19. **Category Structure**: Should each app or website have both a specific category label (e.g., Social Media, Email) and a productivity flag, and can users define new categories beyond the defaults?
+20. **OpenAI Categorization**: Which OpenAI model should be used for categorization, and how will the API key be provided (e.g., environment variable)?
+21. **Persisting User Categories**: When a user categorizes an unknown item, should that information be saved to SQLite for future sessions?
+22. **Menu Bar Summary Metric**: What specific metric should the quick summary in the menu bar display (e.g., productive percentage for the current day or week)?
+23. **Idle or Screen Lock Handling**: If the user locks the screen or the system sleeps, should tracking continue, pause, or record time under a special "idle" category?
