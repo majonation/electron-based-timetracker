@@ -11,5 +11,11 @@ Ask OpenAI with an API call in case the category is not clear.
 7. **Work vs. Distraction Definition**: Are there specific rules or thresholds for determining whether an application is work-related or distracting, or should this be entirely user-configurable? Answer: The rules if something is distracting is when it shows funny videos (e.g. YouTube tutorials are productive, but funny videos are not). In order to categorize the application, it can ask OpenAI and figure out if it's productive or not using an API call. An API key will be provided. 
 8. **Background Operation**: Should the app automatically start on system startup and run silently in the background, or is manual launch acceptable? Answer: No, the application needs to be started manually for now, but later on it might be the case. 
 9. **Privacy Considerations**: Are there any privacy or data retention requirements the app must adhere to? Answer: It runs locally, so at the moment, there are no requirements for privacy. 
-10. **Exporting Reports**: Should the app provide options to export tracked data or weekly reports (e.g., PDF, CSV)? Answer: That comes later. 
+10. **Exporting Reports**: Should the app provide options to export tracked data or weekly reports (e.g., PDF, CSV)? Answer: That comes later.
+
+11. **Platform and Storage Confirmation**: The answers for Questions 2 and 3 seem misaligned. Can you confirm that the application is macOS-only and that SQLite will be used for data storage? Answer:
+12. **Idle Time Handling**: How should the app handle periods of user inactivity? Should tracking pause after a certain duration of no input? Answer:
+13. **Menu Bar Icon Interaction**: What interactions should the macOS menu bar icon support (e.g., show summary, quick actions, context menu)? Answer:
+14. **Data Retention**: Should the application automatically delete or archive older activity data after some time? Answer:
+15. **Time Granularity**: What is the minimum time granularity for tracking (seconds, minutes, etc.)? Answer:
 
