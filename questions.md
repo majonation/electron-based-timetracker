@@ -2,8 +2,8 @@
 
 1. **Supported Browsers**: Which browsers should the app support for tab and URL tracking? (e.g., Chrome, Firefox, Safari, etc.)
 Answer: Chrome Browser
-2. **Platform Scope**: Should the application be macOS-only, or should it support Windows and Linux as well? Answer: 
-3. **Data Storage**: Where should tracked data be stored (local file, SQLite, cloud service)? Answer: macOS-only
+2. **Platform Scope**: Should the application be macOS-only, or should it support Windows and Linux as well? Answer: macOS-only
+3. **Data Storage**: Where should tracked data be stored (local file, SQLite, cloud service)? Answer: locally in SQLite
 4. **Application List Source**: Do you have a preferred source or format for the extensive list of known applications and websites to categorize as productive/unproductive? Answer: SQLite
 5. **User Categorization**: How should users categorize unknown applications or websites? Should there be a UI for manual categorization, or is a configuration file sufficient? Answer: create an initial file in csv format listing websites, applications and if they are considered to support work or are for eduction, entertainment or news. make sure that for website it is able to use main domains and does not just look for the full url path - make it flexible with *
 Ask OpenAI with an API call in case the category is not clear.
@@ -11,5 +11,11 @@ Ask OpenAI with an API call in case the category is not clear.
 7. **Work vs. Distraction Definition**: Are there specific rules or thresholds for determining whether an application is work-related or distracting, or should this be entirely user-configurable? Answer: The rules if something is distracting is when it shows funny videos (e.g. YouTube tutorials are productive, but funny videos are not). In order to categorize the application, it can ask OpenAI and figure out if it's productive or not using an API call. An API key will be provided. 
 8. **Background Operation**: Should the app automatically start on system startup and run silently in the background, or is manual launch acceptable? Answer: No, the application needs to be started manually for now, but later on it might be the case. 
 9. **Privacy Considerations**: Are there any privacy or data retention requirements the app must adhere to? Answer: It runs locally, so at the moment, there are no requirements for privacy. 
-10. **Exporting Reports**: Should the app provide options to export tracked data or weekly reports (e.g., PDF, CSV)? Answer: That comes later. 
+10. **Exporting Reports**: Should the app provide options to export tracked data or weekly reports (e.g., PDF, CSV)? Answer: That comes later. not now
+11. **Platform and Storage Confirmation**: The answers for Questions 2 and 3 seem misaligned. Can you confirm that the application is macOS-only and that SQLite will be used for data storage? Answer: OK I corrected it
+12. **Idle Time Handling**: How should the app handle periods of user inactivity? Should tracking pause after a certain duration of no input? Answer: no it should always run until it is stopped. On the Mac OS top bar should be a small icon, where it can be started and stopped easily
+13. **Menu Bar Icon Interaction**: What interactions should the macOS menu bar icon support (e.g., show summary, quick actions, context menu)? Answer: it allows to open the full application, it should have a quick action for starting and stopping the recording, it should have however a quick time check how productive the user was in a small window, but with big stylish numbers as counter
+14. **Data Retention**: Should the application automatically delete or archive older activity data after some time? Answer: for no now, it should be possible to compare to previous weeks and later on it should be able to say how much productive the week was until that point compared to the previous weeks, it should have a list of best weeks and overall historic data
+15. **Time Granularity**: What is the minimum time granularity for tracking (seconds, minutes, etc.)? Answer: it should round up to 10 seconds, but overall showing the hours and minutes and then seconds rounded as well
+     
 
