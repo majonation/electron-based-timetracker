@@ -2,6 +2,35 @@
 
 ## Phase 1: Clarification
 - [x] Review `spec.md`
-- [x] Add clarification questions to `questions.md`
-- [ ] Receive answers from project owner
-- [ ] Draft detailed implementation plan with phases and milestones
+- [x] Add initial clarification questions to `questions.md`
+- [x] Add second round of clarification questions
+- [x] Receive answers from project owner
+- [x] Draft detailed implementation plan with phases and milestones
+
+## Phase 2: Project Setup
+- [ ] Initialize Electron project structure
+- [ ] Configure SQLite database and ORM
+- [ ] Create initial `data/categorization.csv` seed file
+- [ ] Set up linting, formatting, and basic test harness
+
+## Phase 3: Activity Tracking
+- [ ] Implement macOS foreground application tracking
+- [ ] Implement Chrome tab tracking (including incognito)
+- [ ] Pause and label tracking as idle on screen lock or sleep
+- [ ] Persist activity logs to SQLite rounding to 10-second granularity
+
+## Phase 4: Categorization
+- [ ] Load default categories from CSV into SQLite
+- [ ] Implement UI for manual categorization of unknown items
+- [ ] Integrate OpenAI (`gpt-4o-mini`) for categorization suggestions
+- [ ] Persist user-defined categories for future sessions
+
+## Phase 5: User Interface
+- [ ] Build main window with weekly bar chart (vibrant gradient colors)
+- [ ] Add macOS menu bar icon with start/stop controls
+- [ ] Display current day's productive percentage in menu bar
+- [ ] Ensure UI remains responsive and performant
+
+## Phase 6: Review & Future Work
+- [ ] Compare productivity across weeks and list best weeks
+- [ ] Plan for future export and automation features
