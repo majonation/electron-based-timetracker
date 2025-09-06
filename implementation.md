@@ -8,10 +8,10 @@
 - [x] Draft detailed implementation plan with phases and milestones
 
 ## Phase 2: Project Setup
-- [ ] Initialize Electron project structure
-- [ ] Configure SQLite database and ORM
-- [ ] Create initial `data/categorization.csv` seed file
-- [ ] Set up linting, formatting, and basic test harness
+- [x] Initialize Electron project structure
+- [x] Configure SQLite database and ORM
+- [x] Create initial `data/categorization.csv` seed file
+- [x] Set up linting, formatting, and basic test harness
 
 ## Phase 3: Activity Tracking
 - [ ] Implement macOS foreground application tracking

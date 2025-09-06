@@ -1,0 +1,10 @@
+type,identifier,category,productivity
+app,com.apple.Safari,Productive,1
+app,com.microsoft.VSCode,Productive,1
+website,github.com,GitHub for work,1
+website,app.supabase.com,Supabase work,1
+website,mail.google.com,Email,1
+website,twitter.com,Social Media,0
+website,facebook.com,Social Media,0
+website,youtube.com,Entertainment,0
+website,*.stackoverflow.com,Education,1
