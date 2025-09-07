@@ -35,6 +35,6 @@ Answer: Yes, save user-provided categories to SQLite for reuse.
 Answer: Show the current day's productive percentage versus total tracked time.
 23. **Idle or Screen Lock Handling**: If the user locks the screen or the system sleeps, should tracking continue, pause, or record time under a special "idle" category?
 Answer: Pause tracking and record the interval under an "idle" category.
-24. **Weekly Aggregation**: Should the weekly bar chart display time per individual application or aggregate by category? If aggregated, should users be able to drill down to specific applications?
-25. **Tracking Interval**: What sampling interval should be used to detect the active application and Chrome tab? (e.g., every second, every 5 seconds)
-26. **Unknown Item Prompting**: When encountering an uncategorized app or website, should the user be prompted immediately for categorization, or should it be queued for later review in the UI?
+24. **Weekly Aggregation**: Should the weekly bar chart display time per individual application or aggregate by category? If aggregated, should users be able to drill down to specific applications? Answer: it should offer 2 version of bar chart, one by category and another one in a second tab or toggle where it shows the exact usage of each website and application
+25. **Tracking Interval**: What sampling interval should be used to detect the active application and Chrome tab? (e.g., every second, every 5 seconds) Answer: chrome tab each 5 seconds, yes
+26. **Unknown Item Prompting**: When encountering an uncategorized app or website, should the user be prompted immediately for categorization, or should it be queued for later review in the UI? Answer:  later when the UI is reviewed
