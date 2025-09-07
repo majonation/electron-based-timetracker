@@ -17,8 +17,6 @@ Ask OpenAI with an API call in case the category is not clear.
 13. **Menu Bar Icon Interaction**: What interactions should the macOS menu bar icon support (e.g., show summary, quick actions, context menu)? Answer: it allows to open the full application, it should have a quick action for starting and stopping the recording, it should have however a quick time check how productive the user was in a small window, but with big stylish numbers as counter
 14. **Data Retention**: Should the application automatically delete or archive older activity data after some time? Answer: for no now, it should be possible to compare to previous weeks and later on it should be able to say how much productive the week was until that point compared to the previous weeks, it should have a list of best weeks and overall historic data
 15. **Time Granularity**: What is the minimum time granularity for tracking (seconds, minutes, etc.)? Answer: it should round up to 10 seconds, but overall showing the hours and minutes and then seconds rounded as well
-     
-
 16. **Active Application Tracking**: Should tracking capture only the foreground active application, and should it pause when the system is locked or asleep?
 Answer: Track only the foreground application. Pause tracking and mark time as idle when the system is locked or asleep.
 17. **Chrome Tab Details**: Should tab tracking cover all Chrome windows including incognito, and is there any need to handle pinned tabs separately?
