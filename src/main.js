@@ -1,5 +1,6 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
+const { startTracking } = require('./tracker');
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -13,7 +14,10 @@ function createWindow() {
   win.loadFile(path.join(__dirname, 'index.html'));
 }
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  createWindow();
+  startTracking();
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {

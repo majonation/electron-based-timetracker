@@ -15,6 +15,7 @@
   "type": "commonjs",
   "dependencies": {
     "electron": "^30.0.0",
-    "better-sqlite3": "^9.0.0"
+    "better-sqlite3": "^9.0.0",
+    "active-win": "^8.0.0"
   }
 }
