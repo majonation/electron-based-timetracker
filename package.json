@@ -7,14 +7,19 @@
     "start": "electron .",
     "test": "node --test",
     "lint": "echo \"Linting not configured\"",
-    "format": "echo \"Formatting not configured\""
+    "format": "echo \"Formatting not configured\"",
+    "postinstall": "electron-rebuild"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+  "devDependencies": {
+    "electron-rebuild": "^3.2.19"
+  },
   "dependencies": {
     "electron": "^30.0.0",
-    "better-sqlite3": "^9.0.0"
+    "better-sqlite3": "^9.0.0",
+    "active-win": "^8.0.0"
   }
 }

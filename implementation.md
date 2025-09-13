@@ -9,19 +9,20 @@
 - [x] Add third round of clarification questions
 - [x] Receive answers to third round of questions
 - [x] Add fourth round of clarification questions
-- [ ] Receive answers to fourth round of questions
+ - [x] Receive answers to fourth round of questions
 
 ## Phase 2: Project Setup
 - [x] Initialize Electron project structure
 - [x] Configure SQLite database and ORM
 - [x] Create initial `data/categorization.csv` seed file
 - [x] Set up linting, formatting, and basic test harness
+- [x] Add `electron-rebuild` to ensure native modules match Electron
 
 ## Phase 3: Activity Tracking
-- [ ] Implement macOS foreground application tracking
-- [ ] Implement Chrome tab tracking (including incognito)
-- [ ] Pause and label tracking as idle on screen lock or sleep
-- [ ] Persist activity logs to SQLite rounding to 10-second granularity
+ - [x] Implement macOS foreground application tracking
+ - [x] Implement Chrome tab tracking (including incognito)
+ - [ ] Pause and label tracking as idle on screen lock or sleep
+ - [x] Persist activity logs to SQLite rounding to 10-second granularity
 
 ## Phase 4: Categorization
 - [ ] Load default categories from CSV into SQLite

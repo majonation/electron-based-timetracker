@@ -4,7 +4,7 @@ Using Electron to build a time tracker.
 
 ## Development
 
-1. Install dependencies:
+1. Install dependencies (this will also rebuild native modules for Electron):
    ```bash
    npm install
    ```
