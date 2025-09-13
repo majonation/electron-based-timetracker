@@ -16,6 +16,7 @@
 - [x] Configure SQLite database and ORM
 - [x] Create initial `data/categorization.csv` seed file
 - [x] Set up linting, formatting, and basic test harness
+- [x] Add `electron-rebuild` to ensure native modules match Electron
 
 ## Phase 3: Activity Tracking
  - [x] Implement macOS foreground application tracking
