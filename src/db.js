@@ -10,6 +10,9 @@ db.serialize(() => {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       type TEXT NOT NULL,
       identifier TEXT NOT NULL,
+      title TEXT,
+      description TEXT,
+      full_url TEXT,
       category TEXT,
       productivity INTEGER,
       start_time INTEGER NOT NULL,
@@ -24,6 +27,17 @@ db.serialize(() => {
       productivity INTEGER NOT NULL
     );
   `);
+  
+  // Add new columns if they don't exist (for existing databases)
+  db.run(`ALTER TABLE activities ADD COLUMN title TEXT`, (err) => {
+    // Ignore error if column already exists
+  });
+  db.run(`ALTER TABLE activities ADD COLUMN description TEXT`, (err) => {
+    // Ignore error if column already exists
+  });
+  db.run(`ALTER TABLE activities ADD COLUMN full_url TEXT`, (err) => {
+    // Ignore error if column already exists
+  });
 });
 
 function getAllActivities() {
@@ -80,6 +94,9 @@ function getAggregatedAppData() {
       SELECT 
         type,
         identifier,
+        title,
+        description,
+        full_url,
         category,
         productivity,
         SUM(end_time - start_time) as total_duration,
@@ -109,14 +126,47 @@ function getAggregatedAppData() {
           
           const lastUsedDate = new Date(row.last_used);
           
+          // For websites, extract domain and format display
+          let display_name = row.identifier;
+          let domain = '';
+          let full_url = '';
+          let site_description = '';
+          
+          if (row.type === 'website') {
+            try {
+              const url = new URL(row.identifier);
+              domain = url.hostname.replace('www.', '');
+              full_url = row.full_url || row.identifier;
+              
+              // Use title if available, otherwise use domain
+              if (row.title && row.title.trim()) {
+                display_name = row.title.trim();
+                // Add description after title if available
+                if (row.description && row.description.trim()) {
+                  site_description = row.description.trim();
+                  // Limit description length
+                  if (site_description.length > 100) {
+                    site_description = site_description.substring(0, 100) + '...';
+                  }
+                }
+              } else {
+                display_name = domain;
+              }
+            } catch (e) {
+              // If URL parsing fails, use the identifier as is
+              display_name = row.identifier.length > 60 ? row.identifier.substring(0, 60) + '...' : row.identifier;
+            }
+          }
+          
           return {
             ...row,
             total_duration_seconds: totalSeconds,
             duration_formatted: durationFormatted,
             last_used_formatted: lastUsedDate.toLocaleString(),
-            display_name: row.type === 'website' ? 
-              (row.identifier.length > 60 ? row.identifier.substring(0, 60) + '...' : row.identifier) :
-              row.identifier
+            display_name,
+            domain,
+            full_url,
+            site_description
           };
         });
         resolve(formattedRows);

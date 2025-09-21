@@ -57,13 +57,33 @@ async function loadAggregatedApps(highlightNew = false) {
       const isUpdated = updatedApps.includes(`${app.type}-${app.identifier}`);
       const updatedClass = isUpdated ? ' updated' : '';
       
+      // Format website display
+      let nameDisplay = app.display_name;
+      let domainDisplay = '';
+      let fullUrlDisplay = '';
+      let descriptionDisplay = '';
+      
+      if (app.type === 'website') {
+        if (app.domain) {
+          domainDisplay = ` - ${app.domain}`;
+        }
+        if (app.full_url) {
+          fullUrlDisplay = `<div class="website-url">${app.full_url}</div>`;
+        }
+        if (app.site_description) {
+          descriptionDisplay = `<div class="website-description">${app.site_description}</div>`;
+        }
+      }
+      
       return `
         <div class="app-entry${updatedClass}">
           <div class="app-header-content">
             <span class="app-type ${typeClass}">${app.type.toUpperCase()}</span>
-            <span class="app-name">${app.display_name}</span>
+            <span class="app-name">${nameDisplay}${domainDisplay}</span>
             <span class="app-duration">${app.duration_formatted}</span>
           </div>
+          ${descriptionDisplay}
+          ${fullUrlDisplay}
           <div class="app-details">
             <span class="app-sessions">${app.session_count} sessions</span>
             <span class="app-last-used">Last used: ${app.last_used_formatted}</span>
