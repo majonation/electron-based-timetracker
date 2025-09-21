@@ -55,16 +55,42 @@
         color: #856404;
       }
 
-      .log-container {
+      .summary-stats {
         background-color: white;
         border-radius: 8px;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         margin: 20px 0;
-        max-height: 500px;
+        padding: 20px;
+        text-align: center;
+      }
+
+      .stat-item {
+        display: inline-block;
+        margin: 0 20px;
+      }
+
+      .stat-label {
+        font-size: 14px;
+        color: #666;
+        margin-right: 10px;
+      }
+
+      .stat-value {
+        font-size: 18px;
+        font-weight: bold;
+        color: #007aff;
+      }
+
+      .app-container {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        margin: 20px 0;
+        max-height: 600px;
         overflow-y: auto;
       }
 
-      .log-header {
+      .app-header {
         background-color: #f8f9fa;
         padding: 15px;
         border-bottom: 1px solid #dee2e6;
@@ -81,15 +107,13 @@
         font-weight: normal;
       }
 
-      .log-entry {
-        padding: 12px 15px;
+      .app-entry {
+        padding: 15px;
         border-bottom: 1px solid #f0f0f0;
-        font-family: 'SF Mono', Monaco, monospace;
-        font-size: 12px;
         transition: background-color 0.3s ease;
       }
 
-      .log-entry.new {
+      .app-entry.updated {
         background-color: #e8f5e8;
         animation: highlight 2s ease-out;
       }
@@ -103,41 +127,74 @@
         }
       }
 
-      .log-entry:last-child {
+      .app-entry:last-child {
         border-bottom: none;
       }
 
-      .log-entry:nth-child(even) {
+      .app-entry:nth-child(even) {
         background-color: #fafafa;
       }
 
-      .log-type {
-        display: inline-block;
-        padding: 2px 6px;
-        border-radius: 3px;
-        font-size: 10px;
-        font-weight: bold;
-        margin-right: 8px;
+      .app-header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
       }
 
-      .log-type.app {
+      .app-type {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 10px;
+        font-weight: bold;
+        margin-right: 12px;
+      }
+
+      .app-type.app {
         background-color: #e3f2fd;
         color: #1976d2;
       }
 
-      .log-type.website {
+      .app-type.website {
         background-color: #f3e5f5;
         color: #7b1fa2;
       }
 
-      .log-time {
+      .app-name {
+        flex-grow: 1;
+        font-size: 14px;
+        color: #333;
+        margin-right: 15px;
+      }
+
+      .app-duration {
+        color: #28a745;
+        font-weight: bold;
+        font-size: 16px;
+      }
+
+      .app-details {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
         color: #666;
+        margin-top: 5px;
+      }
+
+      .app-sessions {
+        font-style: italic;
+      }
+
+      .app-last-used {
         font-size: 11px;
       }
 
-      .log-duration {
-        color: #28a745;
-        font-weight: bold;
+      .app-category {
+        font-size: 11px;
+        color: #007aff;
+        margin-top: 5px;
+        font-weight: 500;
       }
 
       .loading {
@@ -150,17 +207,24 @@
   <body>
     <h1>Time Tracker</h1>
     <div class="controls">
-      <button id="refreshBtn">Refresh Log</button>
+      <button id="refreshBtn">Refresh Apps</button>
       <button id="toggleAutoRefresh">Pause Live Updates</button>
       <span id="statusIndicator" class="status live">● LIVE</span>
     </div>
 
-    <div class="log-container">
-      <div class="log-header">
-        <span>Activity Log (Live Updates)</span>
+    <div class="summary-stats">
+      <div class="stat-item">
+        <span class="stat-label">Total Time Tracked:</span>
+        <span id="totalTime" class="stat-value">Loading...</span>
+      </div>
+    </div>
+
+    <div class="app-container">
+      <div class="app-header">
+        <span>Applications & Websites (Sorted by Time)</span>
         <span id="lastUpdated" class="last-updated">Loading...</span>
       </div>
-      <div id="logEntries" class="loading">Loading tracking data...</div>
+      <div id="appList" class="loading">Loading app data...</div>
     </div>
 
     <script src="renderer.js"></script>

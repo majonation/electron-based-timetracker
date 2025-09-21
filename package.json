@@ -1,22 +1,36 @@
 {
   "name": "electron-based-timetracker",
+  "productName": "Time Tracker",
   "version": "1.0.0",
   "description": "using electron to build a time tracker",
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
-    "test": "node --test",
-    "lint": "echo \"Linting not configured\"",
-    "format": "echo \"Formatting not configured\""
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "publish": "electron-forge publish",
+    "lint": "echo \"No linting configured\""
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
+  "author": {
+    "name": "Mario Linge",
+    "email": "mario@mindioo.com"
+  },
+  "license": "MIT",
   "dependencies": {
     "active-win": "^8.2.1",
-    "better-sqlite3": "^12.2.0",
-    "electron": "^30.0.0",
+    "electron-squirrel-startup": "^1.0.1",
     "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "^7.9.0",
+    "@electron-forge/maker-deb": "^7.9.0",
+    "@electron-forge/maker-rpm": "^7.9.0",
+    "@electron-forge/maker-squirrel": "^7.9.0",
+    "@electron-forge/maker-zip": "^7.9.0",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.9.0",
+    "@electron-forge/plugin-fuses": "^7.9.0",
+    "@electron/fuses": "^1.8.0",
+    "electron": "^25.9.0"
   }
 }

@@ -1,91 +1,101 @@
 let refreshInterval;
 let isAutoRefreshEnabled = true;
-let lastActivityCount = 0;
-let previousActivities = [];
+let previousApps = [];
 
-async function loadTrackingLog(highlightNew = false) {
-  const logEntriesDiv = document.getElementById('logEntries');
+async function loadAggregatedApps(highlightNew = false) {
+  const appListDiv = document.getElementById('appList');
   const lastUpdatedSpan = document.getElementById('lastUpdated');
+  const totalTimeSpan = document.getElementById('totalTime');
   
   try {
-    const result = await window.electronAPI.getTrackingLog();
+    const result = await window.electronAPI.getAggregatedApps();
     
     if (!result.success) {
-      logEntriesDiv.innerHTML = `<div class="loading">Error loading data: ${result.error}</div>`;
+      appListDiv.innerHTML = `<div class="loading">Error loading data: ${result.error}</div>`;
       return;
     }
     
-    const activities = result.data;
+    const apps = result.data;
     
-    if (activities.length === 0) {
-      logEntriesDiv.innerHTML = '<div class="loading">No tracking data available yet. Start using your computer to see activity logs here.</div>';
+    if (apps.length === 0) {
+      appListDiv.innerHTML = '<div class="loading">No tracking data available yet. Start using your computer to see apps here.</div>';
       lastUpdatedSpan.textContent = 'No data';
+      totalTimeSpan.textContent = '0s';
       return;
     }
     
-    // Check for new activities
-    const newActivities = [];
-    if (highlightNew && previousActivities.length > 0) {
-      activities.forEach(activity => {
-        const isNew = !previousActivities.some(prev => 
-          prev.start_time === activity.start_time && 
-          prev.identifier === activity.identifier
+    // Calculate total time
+    const totalSeconds = apps.reduce((sum, app) => sum + app.total_duration_seconds, 0);
+    const totalHours = Math.floor(totalSeconds / 3600);
+    const totalMinutes = Math.floor((totalSeconds % 3600) / 60);
+    let totalTimeFormatted;
+    if (totalHours > 0) {
+      totalTimeFormatted = `${totalHours}h ${totalMinutes}m`;
+    } else if (totalMinutes > 0) {
+      totalTimeFormatted = `${totalMinutes}m ${totalSeconds % 60}s`;
+    } else {
+      totalTimeFormatted = `${totalSeconds}s`;
+    }
+    totalTimeSpan.textContent = totalTimeFormatted;
+    
+    // Check for updated apps
+    const updatedApps = [];
+    if (highlightNew && previousApps.length > 0) {
+      apps.forEach(app => {
+        const prevApp = previousApps.find(prev => 
+          prev.identifier === app.identifier && prev.type === app.type
         );
-        if (isNew) {
-          newActivities.push(activity.start_time);
+        if (!prevApp || prevApp.total_duration_seconds !== app.total_duration_seconds) {
+          updatedApps.push(`${app.type}-${app.identifier}`);
         }
       });
     }
     
-    // Generate HTML for each activity
-    const logHTML = activities.map(activity => {
-      const typeClass = activity.type === 'app' ? 'app' : 'website';
-      const identifier = activity.identifier.length > 80 
-        ? activity.identifier.substring(0, 80) + '...' 
-        : activity.identifier;
-      
-      const isNewEntry = newActivities.includes(activity.start_time);
-      const newClass = isNewEntry ? ' new' : '';
+    // Generate HTML for each app
+    const appHTML = apps.map(app => {
+      const typeClass = app.type === 'app' ? 'app' : 'website';
+      const isUpdated = updatedApps.includes(`${app.type}-${app.identifier}`);
+      const updatedClass = isUpdated ? ' updated' : '';
       
       return `
-        <div class="log-entry${newClass}">
-          <span class="log-type ${typeClass}">${activity.type.toUpperCase()}</span>
-          <strong>${identifier}</strong>
-          <br>
-          <span class="log-time">
-            ${activity.start_time_formatted} → ${activity.end_time_formatted}
-          </span>
-          <span class="log-duration" style="float: right;">
-            ${activity.duration_formatted}
-          </span>
-          ${activity.category ? `<br><small>Category: ${activity.category}</small>` : ''}
+        <div class="app-entry${updatedClass}">
+          <div class="app-header-content">
+            <span class="app-type ${typeClass}">${app.type.toUpperCase()}</span>
+            <span class="app-name">${app.display_name}</span>
+            <span class="app-duration">${app.duration_formatted}</span>
+          </div>
+          <div class="app-details">
+            <span class="app-sessions">${app.session_count} sessions</span>
+            <span class="app-last-used">Last used: ${app.last_used_formatted}</span>
+          </div>
+          ${app.category ? `<div class="app-category">Category: ${app.category}</div>` : ''}
         </div>
       `;
     }).join('');
     
-    logEntriesDiv.innerHTML = logHTML;
+    appListDiv.innerHTML = appHTML;
     
     // Update last updated time
     const now = new Date();
     lastUpdatedSpan.textContent = `Last updated: ${now.toLocaleTimeString()}`;
     
-    // Store current activities for next comparison
-    previousActivities = [...activities];
-    lastActivityCount = activities.length;
+    // Store current apps for next comparison
+    previousApps = [...apps];
     
     // Remove highlight animation after 2 seconds
-    if (highlightNew && newActivities.length > 0) {
+    if (highlightNew && updatedApps.length > 0) {
       setTimeout(() => {
-        document.querySelectorAll('.log-entry.new').forEach(entry => {
-          entry.classList.remove('new');
+        document.querySelectorAll('.app-entry.updated').forEach(entry => {
+          entry.classList.remove('updated');
         });
       }, 2000);
     }
     
   } catch (error) {
-    console.error('Error loading tracking log:', error);
-    logEntriesDiv.innerHTML = `<div class="loading">Error: ${error.message}</div>`;
+    console.error('Error loading aggregated apps:', error);
+    appListDiv.innerHTML = `<div class="loading">Error: ${error.message}</div>`;
     lastUpdatedSpan.textContent = 'Error';
+    totalTimeSpan.textContent = 'Error';
   }
 }
 
@@ -96,7 +106,7 @@ function startAutoRefresh() {
   // Refresh every 5 seconds for live updates
   refreshInterval = setInterval(() => {
     if (isAutoRefreshEnabled) {
-      loadTrackingLog(true); // Enable highlighting for auto-refresh
+      loadAggregatedApps(true); // Enable highlighting for auto-refresh
     }
   }, 5000);
 }
@@ -129,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const toggleAutoRefreshBtn = document.getElementById('toggleAutoRefresh');
   
   // Load initial data
-  loadTrackingLog();
+  loadAggregatedApps();
   
   // Start auto-refresh with faster interval for live updates
   startAutoRefresh();
@@ -139,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Manual refresh button
   refreshBtn.addEventListener('click', () => {
-    loadTrackingLog(true); // Enable highlighting for manual refresh
+    loadAggregatedApps(true); // Enable highlighting for manual refresh
   });
   
   // Toggle auto-refresh button
@@ -161,14 +171,14 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (isAutoRefreshEnabled) {
       startAutoRefresh();
       // Immediately refresh when coming back to focus
-      loadTrackingLog(true);
+      loadAggregatedApps(true);
     }
   });
   
   // Handle window focus/blur for better performance
   window.addEventListener('focus', () => {
     if (isAutoRefreshEnabled) {
-      loadTrackingLog(true);
+      loadAggregatedApps(true);
       startAutoRefresh();
     }
   });

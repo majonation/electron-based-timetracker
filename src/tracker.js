@@ -1,6 +1,6 @@
 const activeWin = require('active-win');
 const { exec } = require('child_process');
-const db = require('./db');
+const { db } = require('./db');
 
 async function getChromeActiveTab() {
   return new Promise((resolve) => {
@@ -34,8 +34,10 @@ async function pollActivity() {
     if (current) {
       const start = Math.round(current.startTime / 10000) * 10000;
       const end = Math.round(now / 10000) * 10000;
-      db.prepare('INSERT INTO activities (type, identifier, start_time, end_time) VALUES (?, ?, ?, ?)')
-        .run(current.type, current.identifier, start, end);
+      db.run('INSERT INTO activities (type, identifier, start_time, end_time) VALUES (?, ?, ?, ?)', 
+        [current.type, current.identifier, start, end], (err) => {
+          if (err) console.error('Error inserting activity:', err);
+        });
     }
     current = { ...activity, startTime: now };
   } catch (e) {

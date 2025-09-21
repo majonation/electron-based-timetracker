@@ -74,4 +74,55 @@ function getFormattedTrackingLog() {
   });
 }
 
-module.exports = { db, getAllActivities, getFormattedTrackingLog };
+function getAggregatedAppData() {
+  return new Promise((resolve, reject) => {
+    db.all(`
+      SELECT 
+        type,
+        identifier,
+        category,
+        productivity,
+        SUM(end_time - start_time) as total_duration,
+        COUNT(*) as session_count,
+        MAX(end_time) as last_used
+      FROM activities 
+      GROUP BY type, identifier
+      ORDER BY total_duration DESC
+    `, (err, rows) => {
+      if (err) {
+        reject(err);
+      } else {
+        const formattedRows = rows.map(row => {
+          const totalSeconds = Math.round(row.total_duration / 1000);
+          const hours = Math.floor(totalSeconds / 3600);
+          const minutes = Math.floor((totalSeconds % 3600) / 60);
+          const seconds = totalSeconds % 60;
+          
+          let durationFormatted;
+          if (hours > 0) {
+            durationFormatted = `${hours}h ${minutes}m`;
+          } else if (minutes > 0) {
+            durationFormatted = `${minutes}m ${seconds}s`;
+          } else {
+            durationFormatted = `${seconds}s`;
+          }
+          
+          const lastUsedDate = new Date(row.last_used);
+          
+          return {
+            ...row,
+            total_duration_seconds: totalSeconds,
+            duration_formatted: durationFormatted,
+            last_used_formatted: lastUsedDate.toLocaleString(),
+            display_name: row.type === 'website' ? 
+              (row.identifier.length > 60 ? row.identifier.substring(0, 60) + '...' : row.identifier) :
+              row.identifier
+          };
+        });
+        resolve(formattedRows);
+      }
+    });
+  });
+}
+
+module.exports = { db, getAllActivities, getFormattedTrackingLog, getAggregatedAppData };

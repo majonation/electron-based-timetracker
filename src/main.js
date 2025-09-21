@@ -1,7 +1,13 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+
+// Handle creating/removing shortcuts on Windows when installing/uninstalling.
+if (require('electron-squirrel-startup')) {
+  app.quit();
+}
+
 const { startTracking } = require('./tracker');
-const { getFormattedTrackingLog } = require('./db');
+const { getFormattedTrackingLog, getAggregatedAppData } = require('./db');
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -18,6 +24,27 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  // Set up IPC handlers
+  ipcMain.handle('get-tracking-log', async () => {
+    try {
+      const logData = await getFormattedTrackingLog();
+      return { success: true, data: logData };
+    } catch (error) {
+      console.error('Error fetching tracking log:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('get-aggregated-apps', async () => {
+    try {
+      const appData = await getAggregatedAppData();
+      return { success: true, data: appData };
+    } catch (error) {
+      console.error('Error fetching aggregated app data:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
   createWindow();
   startTracking();
 });
@@ -31,16 +58,5 @@ app.on('window-all-closed', () => {
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
-  }
-});
-
-// IPC handler for getting tracking data
-ipcMain.handle('get-tracking-log', async () => {
-  try {
-    const logData = await getFormattedTrackingLog();
-    return { success: true, data: logData };
-  } catch (error) {
-    console.error('Error fetching tracking log:', error);
-    return { success: false, error: error.message };
   }
 });
