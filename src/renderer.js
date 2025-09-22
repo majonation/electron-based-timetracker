@@ -157,6 +157,12 @@ function updateStatusIndicator() {
 document.addEventListener('DOMContentLoaded', () => {
   const refreshBtn = document.getElementById('refreshBtn');
   const toggleAutoRefreshBtn = document.getElementById('toggleAutoRefresh');
+  const settingsBtn = document.getElementById('settingsBtn');
+  const settingsDropdown = document.getElementById('settingsDropdown');
+  const resetDataBtn = document.getElementById('resetDataBtn');
+  const resetModal = document.getElementById('resetModal');
+  const confirmResetBtn = document.getElementById('confirmResetBtn');
+  const cancelResetBtn = document.getElementById('cancelResetBtn');
   
   // Load initial data
   loadAggregatedApps();
@@ -184,14 +190,58 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   
+  // Settings dropdown toggle
+  settingsBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    settingsDropdown.classList.toggle('show');
+  });
+  
+  // Close dropdown when clicking outside
+  document.addEventListener('click', () => {
+    settingsDropdown.classList.remove('show');
+  });
+  
+  // Reset data button
+  resetDataBtn.addEventListener('click', () => {
+    settingsDropdown.classList.remove('show');
+    resetModal.style.display = 'block';
+  });
+  
+  // Confirm reset
+  confirmResetBtn.addEventListener('click', async () => {
+    try {
+      const result = await window.electronAPI.resetAllData();
+      if (result.success) {
+        resetModal.style.display = 'none';
+        // Refresh the display to show empty state
+        loadAggregatedApps();
+        alert('All data has been reset successfully!');
+      } else {
+        alert('Error resetting data: ' + result.error);
+      }
+    } catch (error) {
+      alert('Error resetting data: ' + error.message);
+    }
+  });
+  
+  // Cancel reset
+  cancelResetBtn.addEventListener('click', () => {
+    resetModal.style.display = 'none';
+  });
+  
+  // Close modal when clicking outside
+  resetModal.addEventListener('click', (e) => {
+    if (e.target === resetModal) {
+      resetModal.style.display = 'none';
+    }
+  });
+  
   // Pause auto-refresh when window is hidden/minimized, resume when visible
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
       stopAutoRefresh();
     } else if (isAutoRefreshEnabled) {
       startAutoRefresh();
-      // Immediately refresh when coming back to focus
-      loadAggregatedApps(true);
     }
   });
   

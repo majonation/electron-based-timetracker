@@ -7,7 +7,7 @@ if (require('electron-squirrel-startup')) {
 }
 
 const { startTracking } = require('./tracker');
-const { getFormattedTrackingLog, getAggregatedAppData } = require('./db');
+const { getFormattedTrackingLog, getAggregatedAppData, resetAllData } = require('./db');
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -41,6 +41,16 @@ app.whenReady().then(() => {
       return { success: true, data: appData };
     } catch (error) {
       console.error('Error fetching aggregated app data:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('reset-all-data', async () => {
+    try {
+      await resetAllData();
+      return { success: true };
+    } catch (error) {
+      console.error('Error resetting data:', error);
       return { success: false, error: error.message };
     }
   });

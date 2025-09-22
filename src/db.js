@@ -175,4 +175,24 @@ function getAggregatedAppData() {
   });
 }
 
-module.exports = { db, getAllActivities, getFormattedTrackingLog, getAggregatedAppData };
+function resetAllData() {
+  return new Promise((resolve, reject) => {
+    db.serialize(() => {
+      db.run('DELETE FROM activities', (err) => {
+        if (err) {
+          reject(err);
+        } else {
+          db.run('DELETE FROM categories', (err) => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve();
+            }
+          });
+        }
+      });
+    });
+  });
+}
+
+module.exports = { db, getAllActivities, getFormattedTrackingLog, getAggregatedAppData, resetAllData };

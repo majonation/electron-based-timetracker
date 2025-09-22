@@ -4,7 +4,8 @@ const { contextBridge, ipcRenderer } = require('electron');
 // the ipcRenderer without exposing the entire object
 contextBridge.exposeInMainWorld('electronAPI', {
   getTrackingLog: () => ipcRenderer.invoke('get-tracking-log'),
-  getAggregatedApps: () => ipcRenderer.invoke('get-aggregated-apps')
+  getAggregatedApps: () => ipcRenderer.invoke('get-aggregated-apps'),
+  resetAllData: () => ipcRenderer.invoke('reset-all-data')
 });
 
 // See the Electron documentation for details on how to use preload scripts:
