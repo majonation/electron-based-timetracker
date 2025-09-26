@@ -47,11 +47,13 @@ async function getChromeActiveTab() {
 }
 
 let current = null;
+let lastRecordTime = null;
 
 async function pollActivity() {
   try {
     const win = await activeWin();
     if (!win) return;
+    
     let activity;
     if (win.owner.name === 'Google Chrome') {
       const tabInfo = await getChromeActiveTab();
@@ -78,21 +80,33 @@ async function pollActivity() {
       const identifier = win.owner.bundleId || win.owner.name;
       activity = { type: 'app', identifier };
     }
+    
     const now = Date.now();
-    if (current && current.identifier === activity.identifier && current.type === activity.type) {
-      return;
-    }
-    if (current) {
-      const start = Math.round(current.startTime / 10000) * 10000;
-      const end = Math.round(now / 10000) * 10000;
+    
+    // Always record a 5-second entry for the current activity
+    // Calculate the start time as 5 seconds ago (or from last record time)
+    const startTime = lastRecordTime || (now - 5000);
+    const endTime = now;
+    
+    // Round to 10-second granularity as specified in the original code
+    const start = Math.round(startTime / 10000) * 10000;
+    const end = Math.round(endTime / 10000) * 10000;
+    
+    // Only insert if we have a meaningful time duration (avoid duplicate entries)
+    if (end > start) {
       db.run('INSERT INTO activities (type, identifier, title, description, full_url, start_time, end_time) VALUES (?, ?, ?, ?, ?, ?, ?)', 
-        [current.type, current.identifier, current.title || null, current.description || null, current.full_url || null, start, end], (err) => {
+        [activity.type, activity.identifier, activity.title || null, activity.description || null, activity.full_url || null, start, end], (err) => {
           if (err) console.error('Error inserting activity:', err);
         });
     }
+    
+    // Update tracking variables
     current = { ...activity, startTime: now };
+    lastRecordTime = now;
+    
   } catch (e) {
     // ignore errors to keep polling
+    console.error('Error in pollActivity:', e);
   }
 }
 
