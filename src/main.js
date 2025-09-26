@@ -7,7 +7,15 @@ if (require('electron-squirrel-startup')) {
 }
 
 const { startTracking } = require('./tracker');
-const { getFormattedTrackingLog, getAggregatedAppData, resetAllData } = require('./db');
+const { 
+  getFormattedTrackingLog, 
+  getAggregatedAppData, 
+  resetAllData,
+  getTodayString,
+  getAggregatedAppDataForDate,
+  getDailyStats,
+  getAvailableDates
+} = require('./db');
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -51,6 +59,47 @@ app.whenReady().then(() => {
       return { success: true };
     } catch (error) {
       console.error('Error resetting data:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  // New daily tracking IPC handlers
+  ipcMain.handle('get-today-string', async () => {
+    try {
+      const today = getTodayString();
+      return { success: true, data: today };
+    } catch (error) {
+      console.error('Error getting today string:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('get-daily-apps', async (event, dateString) => {
+    try {
+      const appData = await getAggregatedAppDataForDate(dateString);
+      return { success: true, data: appData };
+    } catch (error) {
+      console.error('Error fetching daily app data:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('get-daily-stats', async (event, dateString) => {
+    try {
+      const stats = await getDailyStats(dateString);
+      return { success: true, data: stats };
+    } catch (error) {
+      console.error('Error fetching daily stats:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('get-available-dates', async () => {
+    try {
+      const dates = await getAvailableDates();
+      return { success: true, data: dates };
+    } catch (error) {
+      console.error('Error fetching available dates:', error);
       return { success: false, error: error.message };
     }
   });

@@ -1,14 +1,70 @@
 let refreshInterval;
 let isAutoRefreshEnabled = true;
 let previousApps = [];
+let currentDate = null;
+let todayString = null;
 
-async function loadAggregatedApps(highlightNew = false) {
+// Date utility functions
+function formatDateDisplay(dateString) {
+  const date = new Date(dateString + 'T00:00:00');
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  
+  const todayStr = today.toISOString().split('T')[0];
+  const yesterdayStr = yesterday.toISOString().split('T')[0];
+  
+  if (dateString === todayStr) {
+    return `Today (${date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })})`;
+  } else if (dateString === yesterdayStr) {
+    return `Yesterday (${date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })})`;
+  } else {
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  }
+}
+
+function addDays(dateString, days) {
+  const date = new Date(dateString + 'T00:00:00');
+  date.setDate(date.getDate() + days);
+  return date.toISOString().split('T')[0];
+}
+
+async function loadDailyStats(dateString) {
+  try {
+    const result = await window.electronAPI.getDailyStats(dateString);
+    
+    if (result.success) {
+      const stats = result.data;
+      document.getElementById('totalSessions').textContent = stats.total_sessions;
+      document.getElementById('uniqueApps').textContent = stats.unique_apps;
+      document.getElementById('firstActivity').textContent = stats.first_activity || '-';
+    } else {
+      // Clear stats on error
+      document.getElementById('totalSessions').textContent = '-';
+      document.getElementById('uniqueApps').textContent = '-';
+      document.getElementById('firstActivity').textContent = '-';
+    }
+  } catch (error) {
+    console.error('Error loading daily stats:', error);
+    // Clear stats on error
+    document.getElementById('totalSessions').textContent = '-';
+    document.getElementById('uniqueApps').textContent = '-';
+    document.getElementById('firstActivity').textContent = '-';
+  }
+}
+
+async function loadDailyApps(dateString, highlightNew = false) {
   const appListDiv = document.getElementById('appList');
   const lastUpdatedSpan = document.getElementById('lastUpdated');
   const totalTimeSpan = document.getElementById('totalTime');
   
   try {
-    const result = await window.electronAPI.getAggregatedApps();
+    const result = await window.electronAPI.getDailyApps(dateString);
     
     if (!result.success) {
       appListDiv.innerHTML = `<div class="loading">Error loading data: ${result.error}</div>`;
@@ -18,9 +74,13 @@ async function loadAggregatedApps(highlightNew = false) {
     const apps = result.data;
     
     if (apps.length === 0) {
-      appListDiv.innerHTML = '<div class="loading">No tracking data available yet. Start using your computer to see apps here.</div>';
+      appListDiv.innerHTML = `<div class="loading">No tracking data available for ${formatDateDisplay(dateString)}.</div>`;
       lastUpdatedSpan.textContent = 'No data';
       totalTimeSpan.textContent = '0s';
+      // Clear other stats
+      document.getElementById('totalSessions').textContent = '0';
+      document.getElementById('uniqueApps').textContent = '0';
+      document.getElementById('firstActivity').textContent = '-';
       return;
     }
     
@@ -37,6 +97,9 @@ async function loadAggregatedApps(highlightNew = false) {
       totalTimeFormatted = `${totalSeconds}s`;
     }
     totalTimeSpan.textContent = totalTimeFormatted;
+    
+    // Load daily statistics
+    await loadDailyStats(dateString);
     
     // Check for updated apps
     const updatedApps = [];
@@ -119,14 +182,61 @@ async function loadAggregatedApps(highlightNew = false) {
   }
 }
 
+// Date navigation functions
+async function navigateToDate(dateString) {
+  currentDate = dateString;
+  
+  // Update date display
+  document.getElementById('currentDateDisplay').textContent = formatDateDisplay(dateString);
+  document.getElementById('datePicker').value = dateString;
+  
+  // Update navigation button states
+  updateNavigationButtons();
+  
+  // Load data for the selected date
+  await loadDailyApps(dateString, true);
+}
+
+function updateNavigationButtons() {
+  const nextBtn = document.getElementById('nextDayBtn');
+  const todayBtn = document.getElementById('todayBtn');
+  
+  // Disable next button if current date is today or in the future
+  const today = new Date().toISOString().split('T')[0];
+  nextBtn.disabled = currentDate >= today;
+  
+  // Update today button state
+  todayBtn.disabled = currentDate === today;
+}
+
+async function goToPreviousDay() {
+  const prevDate = addDays(currentDate, -1);
+  await navigateToDate(prevDate);
+}
+
+async function goToNextDay() {
+  const nextDate = addDays(currentDate, 1);
+  const today = new Date().toISOString().split('T')[0];
+  
+  // Don't go beyond today
+  if (nextDate <= today) {
+    await navigateToDate(nextDate);
+  }
+}
+
+async function goToToday() {
+  const today = new Date().toISOString().split('T')[0];
+  await navigateToDate(today);
+}
+
 function startAutoRefresh() {
   if (refreshInterval) {
     clearInterval(refreshInterval);
   }
-  // Refresh every 5 seconds for live updates
+  // Refresh every 5 seconds for live updates, but only for today
   refreshInterval = setInterval(() => {
-    if (isAutoRefreshEnabled) {
-      loadAggregatedApps(true); // Enable highlighting for auto-refresh
+    if (isAutoRefreshEnabled && currentDate === todayString) {
+      loadDailyApps(currentDate, true); // Enable highlighting for auto-refresh
     }
   }, 5000);
 }
@@ -154,7 +264,7 @@ function updateStatusIndicator() {
 }
 
 // Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const refreshBtn = document.getElementById('refreshBtn');
   const toggleAutoRefreshBtn = document.getElementById('toggleAutoRefresh');
   const settingsBtn = document.getElementById('settingsBtn');
@@ -164,8 +274,34 @@ document.addEventListener('DOMContentLoaded', () => {
   const confirmResetBtn = document.getElementById('confirmResetBtn');
   const cancelResetBtn = document.getElementById('cancelResetBtn');
   
-  // Load initial data
-  loadAggregatedApps();
+  // Date navigation elements
+  const prevDayBtn = document.getElementById('prevDayBtn');
+  const nextDayBtn = document.getElementById('nextDayBtn');
+  const todayBtn = document.getElementById('todayBtn');
+  const datePicker = document.getElementById('datePicker');
+  const currentDateDisplay = document.getElementById('currentDateDisplay');
+  
+  // Initialize with today's date
+  try {
+    const todayResult = await window.electronAPI.getTodayString();
+    if (todayResult.success) {
+      todayString = todayResult.data;
+      currentDate = todayString;
+      await navigateToDate(currentDate);
+    } else {
+      console.error('Error getting today string:', todayResult.error);
+      // Fallback to client-side date
+      todayString = new Date().toISOString().split('T')[0];
+      currentDate = todayString;
+      await navigateToDate(currentDate);
+    }
+  } catch (error) {
+    console.error('Error initializing date:', error);
+    // Fallback to client-side date
+    todayString = new Date().toISOString().split('T')[0];
+    currentDate = todayString;
+    await navigateToDate(currentDate);
+  }
   
   // Start auto-refresh with faster interval for live updates
   startAutoRefresh();
@@ -175,7 +311,35 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Manual refresh button
   refreshBtn.addEventListener('click', () => {
-    loadAggregatedApps(true); // Enable highlighting for manual refresh
+    loadDailyApps(currentDate, true); // Enable highlighting for manual refresh
+  });
+  
+  // Date navigation event listeners
+  prevDayBtn.addEventListener('click', goToPreviousDay);
+  nextDayBtn.addEventListener('click', goToNextDay);
+  todayBtn.addEventListener('click', goToToday);
+  
+  // Date picker event listener
+  datePicker.addEventListener('change', async (e) => {
+    const selectedDate = e.target.value;
+    if (selectedDate) {
+      await navigateToDate(selectedDate);
+    }
+  });
+  
+  // Click on date display to show date picker
+  currentDateDisplay.addEventListener('click', () => {
+    datePicker.classList.toggle('show');
+    if (datePicker.classList.contains('show')) {
+      datePicker.focus();
+    }
+  });
+  
+  // Hide date picker when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.current-date')) {
+      datePicker.classList.remove('show');
+    }
   });
   
   // Toggle auto-refresh button
@@ -214,7 +378,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (result.success) {
         resetModal.style.display = 'none';
         // Refresh the display to show empty state
-        loadAggregatedApps();
+        await loadDailyApps(currentDate);
         alert('All data has been reset successfully!');
       } else {
         alert('Error resetting data: ' + result.error);
@@ -248,7 +412,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Handle window focus/blur for better performance
   window.addEventListener('focus', () => {
     if (isAutoRefreshEnabled) {
-      loadAggregatedApps(true);
+      loadDailyApps(currentDate, true);
       startAutoRefresh();
     }
   });

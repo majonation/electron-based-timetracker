@@ -195,4 +195,208 @@ function resetAllData() {
   });
 }
 
-module.exports = { db, getAllActivities, getFormattedTrackingLog, getAggregatedAppData, resetAllData };
+// Date utility functions
+function getDateString(timestamp) {
+  const date = new Date(timestamp);
+  return date.toISOString().split('T')[0]; // Returns YYYY-MM-DD format
+}
+
+function getDayBoundaries(dateString) {
+  // dateString should be in YYYY-MM-DD format
+  const startOfDay = new Date(dateString + 'T00:00:00.000').getTime();
+  const endOfDay = new Date(dateString + 'T23:59:59.999').getTime();
+  return { startOfDay, endOfDay };
+}
+
+function getTodayString() {
+  return getDateString(Date.now());
+}
+
+// Get activities for a specific date
+function getActivitiesForDate(dateString) {
+  return new Promise((resolve, reject) => {
+    const { startOfDay, endOfDay } = getDayBoundaries(dateString);
+    
+    db.all(`
+      SELECT * FROM activities 
+      WHERE start_time >= ? AND start_time <= ?
+      ORDER BY start_time DESC
+    `, [startOfDay, endOfDay], (err, rows) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(rows);
+      }
+    });
+  });
+}
+
+// Get aggregated app data for a specific date
+function getAggregatedAppDataForDate(dateString) {
+  return new Promise((resolve, reject) => {
+    const { startOfDay, endOfDay } = getDayBoundaries(dateString);
+    
+    db.all(`
+      SELECT 
+        type,
+        identifier,
+        title,
+        description,
+        full_url,
+        category,
+        productivity,
+        SUM(end_time - start_time) as total_duration,
+        COUNT(*) as session_count,
+        MAX(end_time) as last_used
+      FROM activities 
+      WHERE start_time >= ? AND start_time <= ?
+      GROUP BY type, identifier
+      ORDER BY total_duration DESC
+    `, [startOfDay, endOfDay], (err, rows) => {
+      if (err) {
+        reject(err);
+      } else {
+        const formattedRows = rows.map(row => {
+          const totalSeconds = Math.round(row.total_duration / 1000);
+          const hours = Math.floor(totalSeconds / 3600);
+          const minutes = Math.floor((totalSeconds % 3600) / 60);
+          const seconds = totalSeconds % 60;
+          
+          let durationFormatted;
+          if (hours > 0) {
+            durationFormatted = `${hours}h ${minutes}m`;
+          } else if (minutes > 0) {
+            durationFormatted = `${minutes}m ${seconds}s`;
+          } else {
+            durationFormatted = `${seconds}s`;
+          }
+          
+          const lastUsedDate = new Date(row.last_used);
+          
+          // For websites, extract domain and format display
+          let display_name = row.identifier;
+          let domain = '';
+          let full_url = '';
+          let site_description = '';
+          
+          if (row.type === 'website') {
+            try {
+              const url = new URL(row.identifier);
+              domain = url.hostname.replace('www.', '');
+              full_url = row.full_url || row.identifier;
+              
+              // Use title if available, otherwise use domain
+              if (row.title && row.title.trim()) {
+                display_name = row.title.trim();
+                // Add description after title if available
+                if (row.description && row.description.trim()) {
+                  site_description = row.description.trim();
+                  // Limit description length
+                  if (site_description.length > 100) {
+                    site_description = site_description.substring(0, 100) + '...';
+                  }
+                }
+              } else {
+                display_name = domain;
+              }
+            } catch (e) {
+              // If URL parsing fails, use the identifier as is
+              display_name = row.identifier.length > 60 ? row.identifier.substring(0, 60) + '...' : row.identifier;
+            }
+          }
+          
+          return {
+            ...row,
+            total_duration_seconds: totalSeconds,
+            duration_formatted: durationFormatted,
+            last_used_formatted: lastUsedDate.toLocaleString(),
+            display_name,
+            domain,
+            full_url,
+            site_description
+          };
+        });
+        resolve(formattedRows);
+      }
+    });
+  });
+}
+
+// Get daily statistics for a specific date
+function getDailyStats(dateString) {
+  return new Promise((resolve, reject) => {
+    const { startOfDay, endOfDay } = getDayBoundaries(dateString);
+    
+    db.all(`
+      SELECT 
+        COUNT(*) as total_sessions,
+        COUNT(DISTINCT identifier) as unique_apps,
+        SUM(end_time - start_time) as total_duration,
+        MIN(start_time) as first_activity,
+        MAX(end_time) as last_activity
+      FROM activities 
+      WHERE start_time >= ? AND start_time <= ?
+    `, [startOfDay, endOfDay], (err, rows) => {
+      if (err) {
+        reject(err);
+      } else {
+        const stats = rows[0];
+        const totalSeconds = Math.round((stats.total_duration || 0) / 1000);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        
+        let totalTimeFormatted;
+        if (hours > 0) {
+          totalTimeFormatted = `${hours}h ${minutes}m`;
+        } else if (minutes > 0) {
+          totalTimeFormatted = `${minutes}m ${totalSeconds % 60}s`;
+        } else {
+          totalTimeFormatted = `${totalSeconds}s`;
+        }
+        
+        resolve({
+          date: dateString,
+          total_sessions: stats.total_sessions || 0,
+          unique_apps: stats.unique_apps || 0,
+          total_duration_seconds: totalSeconds,
+          total_time_formatted: totalTimeFormatted,
+          first_activity: stats.first_activity ? new Date(stats.first_activity).toLocaleTimeString() : null,
+          last_activity: stats.last_activity ? new Date(stats.last_activity).toLocaleTimeString() : null
+        });
+      }
+    });
+  });
+}
+
+// Get list of dates that have activity data
+function getAvailableDates() {
+  return new Promise((resolve, reject) => {
+    db.all(`
+      SELECT DISTINCT date(start_time/1000, 'unixepoch', 'localtime') as activity_date
+      FROM activities 
+      ORDER BY activity_date DESC
+    `, (err, rows) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(rows.map(row => row.activity_date));
+      }
+    });
+  });
+}
+
+module.exports = { 
+  db, 
+  getAllActivities, 
+  getFormattedTrackingLog, 
+  getAggregatedAppData, 
+  resetAllData,
+  // New daily functions
+  getDateString,
+  getDayBoundaries,
+  getTodayString,
+  getActivitiesForDate,
+  getAggregatedAppDataForDate,
+  getDailyStats,
+  getAvailableDates
+};

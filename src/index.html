@@ -333,6 +333,93 @@
       .btn-secondary:hover {
         background-color: #5a6268;
       }
+
+      /* Date Navigation Styles */
+      .date-navigation {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        margin: 20px 0;
+        padding: 15px;
+      }
+
+      .date-controls {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+      }
+
+      .nav-btn {
+        background-color: #6c757d;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background-color 0.2s ease;
+      }
+
+      .nav-btn:hover {
+        background-color: #5a6268;
+      }
+
+      .nav-btn:disabled {
+        background-color: #dee2e6;
+        color: #6c757d;
+        cursor: not-allowed;
+      }
+
+      .today-btn {
+        background-color: #28a745;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: bold;
+        transition: background-color 0.2s ease;
+      }
+
+      .today-btn:hover {
+        background-color: #218838;
+      }
+
+      .current-date {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 200px;
+        justify-content: center;
+      }
+
+      #currentDateDisplay {
+        font-size: 18px;
+        font-weight: bold;
+        color: #333;
+        cursor: pointer;
+        padding: 8px 12px;
+        border-radius: 6px;
+        transition: background-color 0.2s ease;
+      }
+
+      #currentDateDisplay:hover {
+        background-color: #f8f9fa;
+      }
+
+      .date-picker {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 6px 10px;
+        font-size: 14px;
+        display: none;
+      }
+
+      .date-picker.show {
+        display: inline-block;
+      }
     </style>
   </head>
   <body>
@@ -350,10 +437,35 @@
       </div>
     </div>
 
+    <!-- Date Navigation -->
+    <div class="date-navigation">
+      <div class="date-controls">
+        <button id="prevDayBtn" class="nav-btn">← Previous</button>
+        <div class="current-date">
+          <span id="currentDateDisplay">Loading...</span>
+          <input type="date" id="datePicker" class="date-picker">
+        </div>
+        <button id="nextDayBtn" class="nav-btn">Next →</button>
+        <button id="todayBtn" class="today-btn">Today</button>
+      </div>
+    </div>
+
     <div class="summary-stats">
       <div class="stat-item">
-        <span class="stat-label">Total Time Tracked:</span>
+        <span class="stat-label">Total Time:</span>
         <span id="totalTime" class="stat-value">Loading...</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Sessions:</span>
+        <span id="totalSessions" class="stat-value">-</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Apps Used:</span>
+        <span id="uniqueApps" class="stat-value">-</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">First Activity:</span>
+        <span id="firstActivity" class="stat-value">-</span>
       </div>
     </div>
 
