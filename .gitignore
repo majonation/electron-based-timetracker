@@ -3,3 +3,7 @@ node_modules/
 *.log
 /dist
 
+# Database files
+data/timetracker.db
+data/*.db
+
