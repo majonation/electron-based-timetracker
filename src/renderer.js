@@ -234,9 +234,27 @@ function startAutoRefresh() {
     clearInterval(refreshInterval);
   }
   // Refresh every 5 seconds for live updates, but only for today
-  refreshInterval = setInterval(() => {
-    if (isAutoRefreshEnabled && currentDate === todayString) {
-      loadDailyApps(currentDate, true); // Enable highlighting for auto-refresh
+  refreshInterval = setInterval(async () => {
+    if (isAutoRefreshEnabled) {
+      // Check if we need to update todayString (day has changed)
+      const currentTodayString = new Date().toISOString().split('T')[0];
+      if (currentTodayString !== todayString) {
+        console.log('Day changed detected, updating from', todayString, 'to', currentTodayString);
+        todayString = currentTodayString;
+        
+        // If we're currently viewing the old "today", automatically switch to the new today
+        if (currentDate === new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]) {
+          await navigateToDate(todayString);
+        }
+        
+        // Update navigation buttons since today changed
+        updateNavigationButtons();
+      }
+      
+      // Only refresh if viewing today
+      if (currentDate === todayString) {
+        loadDailyApps(currentDate, true); // Enable highlighting for auto-refresh
+      }
     }
   }, 5000);
 }
@@ -410,8 +428,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
   
   // Handle window focus/blur for better performance
-  window.addEventListener('focus', () => {
+  window.addEventListener('focus', async () => {
     if (isAutoRefreshEnabled) {
+      // Check for day change when window regains focus
+      const currentTodayString = new Date().toISOString().split('T')[0];
+      if (currentTodayString !== todayString) {
+        console.log('Day changed detected on focus, updating from', todayString, 'to', currentTodayString);
+        todayString = currentTodayString;
+        
+        // If we're currently viewing the old "today", automatically switch to the new today
+        if (currentDate === new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]) {
+          await navigateToDate(todayString);
+        }
+        
+        updateNavigationButtons();
+      }
+      
       loadDailyApps(currentDate, true);
       startAutoRefresh();
     }

@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, systemPreferences, dialog, shell } = require('electron');
 const path = require('path');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -31,7 +31,49 @@ function createWindow() {
   win.loadFile(path.join(__dirname, 'index.html'));
 }
 
-app.whenReady().then(() => {
+async function checkScreenRecordingPermission() {
+  // Check if we have screen recording permission (macOS only)
+  if (process.platform !== 'darwin') {
+    return true; // Not macOS, no permission needed
+  }
+
+  const status = systemPreferences.getMediaAccessStatus('screen');
+  
+  if (status === 'granted') {
+    return true;
+  }
+  
+  // Permission not granted - show dialog and guide user
+  const response = await dialog.showMessageBox({
+    type: 'warning',
+    title: 'Screen Recording Permission Required',
+    message: 'Time Tracker needs Screen Recording permission to track your activity.',
+    detail: 'Click "Open System Settings" to grant permission, then restart the app.\n\n' +
+            'In System Settings:\n' +
+            '1. Go to Privacy & Security\n' +
+            '2. Click Screen Recording\n' +
+            '3. Enable Time Tracker',
+    buttons: ['Open System Settings', 'Quit'],
+    defaultId: 0,
+    cancelId: 1
+  });
+  
+  if (response.response === 0) {
+    // Open System Settings to Privacy & Security > Screen Recording
+    shell.openExternal('x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture');
+  }
+  
+  // Quit the app - user needs to grant permission and restart
+  app.quit();
+  return false;
+}
+
+app.whenReady().then(async () => {
+  // Check for screen recording permission before starting
+  const hasPermission = await checkScreenRecordingPermission();
+  if (!hasPermission) {
+    return; // App will quit
+  }
   // Set up IPC handlers
   ipcMain.handle('get-tracking-log', async () => {
     try {

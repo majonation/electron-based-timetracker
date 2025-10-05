@@ -2,28 +2,28 @@
 
 ## Phase 1: Database Layer Updates
 - [x] Review existing database schema and functions
-- [ ] Add date-based utility functions for day boundaries
-- [ ] Create daily aggregation functions
-- [ ] Add date filtering to existing queries
-- [ ] Test database functions with sample data
+- [x] Add date-based utility functions for day boundaries
+- [x] Create daily aggregation functions
+- [x] Add date filtering to existing queries
+- [x] Test database functions with sample data
 
 ## Phase 2: Backend API Updates  
-- [ ] Add IPC handlers for daily data retrieval
-- [ ] Create daily statistics calculation functions
-- [ ] Add date navigation API endpoints
-- [ ] Update preload.js with new API methods
+- [x] Add IPC handlers for daily data retrieval
+- [x] Create daily statistics calculation functions
+- [x] Add date navigation API endpoints
+- [x] Update preload.js with new API methods
 
 ## Phase 3: Frontend UI Components
-- [ ] Create date navigation component (Previous/Next/Today buttons)
-- [ ] Add date display showing current selected day
-- [ ] Create daily statistics panel
-- [ ] Add date picker for jumping to specific dates
+- [x] Create date navigation component (Previous/Next/Today buttons)
+- [x] Add date display showing current selected day
+- [x] Create daily statistics panel
+- [x] Add date picker for jumping to specific dates
 
 ## Phase 4: Data Display Updates
-- [ ] Modify existing app list to show daily data
-- [ ] Update renderer.js to handle date-based data loading
-- [ ] Add empty state handling for days with no data
-- [ ] Implement automatic refresh for current day
+- [x] Modify existing app list to show daily data
+- [x] Update renderer.js to handle date-based data loading
+- [x] Add empty state handling for days with no data
+- [x] Implement automatic refresh for current day
 
 ## Phase 5: Integration & Polish
 - [ ] Ensure app always starts with "today" view
@@ -36,6 +36,17 @@
 - [ ] Test edge cases (midnight transitions, empty days)
 - [ ] Update main implementation.md
 - [ ] Document new features and usage
+
+## Critical Bug Fixes (Completed)
+- [x] **Day Transition Bug**: Fixed automatic day switching when app runs across multiple days
+  - Added day change detection in auto-refresh and window focus handlers
+  - App now automatically switches to new day when date changes
+  - Updated navigation buttons when day transitions occur
+- [x] **Time Accuracy Bug**: Fixed inaccurate time counting that was missing significant usage time
+  - Removed 10-second rounding that caused time loss
+  - Improved polling frequency from 5s to 2s for better accuracy
+  - Fixed initialization gaps and edge case handling
+  - Enhanced Chrome tab detection with fallback handling
 
 ## Key Features to Implement
 

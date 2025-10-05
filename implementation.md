@@ -26,6 +26,14 @@
 - [x] Implement Chrome tab tracking (including incognito)
 - [ ] Pause and label tracking as idle on screen lock or sleep
 - [x] Persist activity logs to SQLite rounding to 10-second granularity
+ - [x] Fix rounding to avoid undercounting by flooring start and ceiling end to 10s
+ - [x] Handle day rollover by splitting intervals that cross midnight
+- [x] Handle Screen Recording permission errors gracefully
+ - [x] Detect permission errors from active-win
+ - [x] Stop polling when permission is denied
+ - [x] Show user-friendly dialog with instructions to grant permission
+ - [x] Proactively check and request Screen Recording permission on app startup
+ - [x] Open System Settings directly to Screen Recording preferences
 
 ## Phase 4: Categorization
 
