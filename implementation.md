@@ -28,6 +28,7 @@
 - [x] Persist activity logs to SQLite rounding to 10-second granularity
  - [x] Fix rounding to avoid undercounting by flooring start and ceiling end to 10s
  - [x] Handle day rollover by splitting intervals that cross midnight
+ - [x] Fix timezone issue in date boundary calculations (getDayBoundaries and getDateString)
 - [x] Handle Screen Recording permission errors gracefully
  - [x] Detect permission errors from active-win
  - [x] Stop polling when permission is denied

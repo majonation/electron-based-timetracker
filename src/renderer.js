@@ -5,14 +5,21 @@ let currentDate = null;
 let todayString = null;
 
 // Date utility functions
+function getLocalDateString(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 function formatDateDisplay(dateString) {
   const date = new Date(dateString + 'T00:00:00');
   const today = new Date();
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
   
-  const todayStr = today.toISOString().split('T')[0];
-  const yesterdayStr = yesterday.toISOString().split('T')[0];
+  const todayStr = getLocalDateString(today);
+  const yesterdayStr = getLocalDateString(yesterday);
   
   if (dateString === todayStr) {
     return `Today (${date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })})`;
@@ -31,7 +38,7 @@ function formatDateDisplay(dateString) {
 function addDays(dateString, days) {
   const date = new Date(dateString + 'T00:00:00');
   date.setDate(date.getDate() + days);
-  return date.toISOString().split('T')[0];
+  return getLocalDateString(date);
 }
 
 async function loadDailyStats(dateString) {
@@ -202,7 +209,7 @@ function updateNavigationButtons() {
   const todayBtn = document.getElementById('todayBtn');
   
   // Disable next button if current date is today or in the future
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalDateString();
   nextBtn.disabled = currentDate >= today;
   
   // Update today button state
@@ -216,7 +223,7 @@ async function goToPreviousDay() {
 
 async function goToNextDay() {
   const nextDate = addDays(currentDate, 1);
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalDateString();
   
   // Don't go beyond today
   if (nextDate <= today) {
@@ -225,7 +232,7 @@ async function goToNextDay() {
 }
 
 async function goToToday() {
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalDateString();
   await navigateToDate(today);
 }
 
@@ -237,13 +244,15 @@ function startAutoRefresh() {
   refreshInterval = setInterval(async () => {
     if (isAutoRefreshEnabled) {
       // Check if we need to update todayString (day has changed)
-      const currentTodayString = new Date().toISOString().split('T')[0];
+      const currentTodayString = getLocalDateString();
       if (currentTodayString !== todayString) {
         console.log('Day changed detected, updating from', todayString, 'to', currentTodayString);
         todayString = currentTodayString;
         
         // If we're currently viewing the old "today", automatically switch to the new today
-        if (currentDate === new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]) {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        if (currentDate === getLocalDateString(yesterday)) {
           await navigateToDate(todayString);
         }
         
@@ -309,14 +318,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else {
       console.error('Error getting today string:', todayResult.error);
       // Fallback to client-side date
-      todayString = new Date().toISOString().split('T')[0];
+      todayString = getLocalDateString();
       currentDate = todayString;
       await navigateToDate(currentDate);
     }
   } catch (error) {
     console.error('Error initializing date:', error);
     // Fallback to client-side date
-    todayString = new Date().toISOString().split('T')[0];
+    todayString = getLocalDateString();
     currentDate = todayString;
     await navigateToDate(currentDate);
   }
@@ -431,13 +440,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   window.addEventListener('focus', async () => {
     if (isAutoRefreshEnabled) {
       // Check for day change when window regains focus
-      const currentTodayString = new Date().toISOString().split('T')[0];
+      const currentTodayString = getLocalDateString();
       if (currentTodayString !== todayString) {
         console.log('Day changed detected on focus, updating from', todayString, 'to', currentTodayString);
         todayString = currentTodayString;
         
         // If we're currently viewing the old "today", automatically switch to the new today
-        if (currentDate === new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]) {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        if (currentDate === getLocalDateString(yesterday)) {
           await navigateToDate(todayString);
         }
         

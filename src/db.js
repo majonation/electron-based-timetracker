@@ -198,14 +198,24 @@ function resetAllData() {
 // Date utility functions
 function getDateString(timestamp) {
   const date = new Date(timestamp);
-  return date.toISOString().split('T')[0]; // Returns YYYY-MM-DD format
+  // Use local date components instead of ISO string to avoid timezone issues
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`; // Returns YYYY-MM-DD format in local time
 }
 
 function getDayBoundaries(dateString) {
   // dateString should be in YYYY-MM-DD format
-  const startOfDay = new Date(dateString + 'T00:00:00.000').getTime();
-  const endOfDay = new Date(dateString + 'T23:59:59.999').getTime();
-  return { startOfDay, endOfDay };
+  // Parse the date in local timezone to get correct boundaries
+  const [year, month, day] = dateString.split('-').map(Number);
+  const startDate = new Date(year, month - 1, day, 0, 0, 0, 0);
+  const endDate = new Date(year, month - 1, day, 23, 59, 59, 999);
+  
+  return { 
+    startOfDay: startDate.getTime(), 
+    endOfDay: endDate.getTime() 
+  };
 }
 
 function getTodayString() {
