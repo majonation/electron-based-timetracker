@@ -37,33 +37,118 @@ async function checkScreenRecordingPermission() {
     return true; // Not macOS, no permission needed
   }
 
-  const status = systemPreferences.getMediaAccessStatus('screen');
+  // Check screen recording permission status
+  let status = systemPreferences.getMediaAccessStatus('screen');
+  console.log('Initial screen recording permission status:', status);
   
-  if (status === 'granted') {
+  // Always attempt to trigger the prompt by accessing screen content
+  // This will trigger the macOS permission dialog ONLY on first run (status: 'not-determined')
+  // After that, user must manually grant permission in System Settings
+  console.log('Attempting to trigger screen recording permission prompt...');
+  
+  const tempWin = new BrowserWindow({
+    show: false,
+    webPreferences: {
+      nodeIntegration: false
+    }
+  });
+  
+  try {
+    // Attempt to get screen sources - this triggers the permission prompt on first run
+    const { desktopCapturer } = require('electron');
+    const sources = await desktopCapturer.getSources({ types: ['screen'] });
+    console.log('desktopCapturer.getSources() completed, found', sources.length, 'sources');
+  } catch (error) {
+    console.log('Screen capture attempt error:', error.message);
+  } finally {
+    tempWin.close();
+  }
+  
+  // Give macOS time to show the permission dialog and process user's response
+  console.log('Waiting for permission dialog response...');
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  
+  // Check status again after triggering the prompt
+  status = systemPreferences.getMediaAccessStatus('screen');
+  console.log('Permission status after prompt attempt:', status);
+  
+  // Now test if active-win actually works (the real test)
+  console.log('Testing active-win functionality...');
+  const activeWin = require('active-win');
+  let activeWinWorks = false;
+  
+  try {
+    const win = await activeWin();
+    if (win) {
+      console.log('active-win test successful, detected window:', win.owner.name);
+      activeWinWorks = true;
+    } else {
+      console.log('active-win returned null (no active window)');
+      activeWinWorks = true; // null is valid, means no window is active
+    }
+  } catch (error) {
+    console.error('active-win test failed:', error.message);
+    activeWinWorks = false;
+  }
+  
+  // If both status is granted AND active-win works, we're good
+  if (status === 'granted' && activeWinWorks) {
+    console.log('Screen recording permission verified and active-win working!');
     return true;
   }
   
-  // Permission not granted - show dialog and guide user
+  // Permission not working properly - show dialog and guide user
+  console.log('Permission not working properly. Status:', status, 'active-win works:', activeWinWorks);
+  
+  let detailMessage = '';
+  if (status === 'denied') {
+    detailMessage = 'Permission was denied. You must enable it manually in System Settings.\n\n';
+  } else if (status === 'not-determined') {
+    detailMessage = 'Permission has not been granted yet.\n\n';
+  } else if (status === 'granted' && !activeWinWorks) {
+    detailMessage = 'Permission shows as granted, but the app cannot access window information.\n' +
+                   'This may require restarting your Mac or re-granting permission.\n\n';
+  }
+  
   const response = await dialog.showMessageBox({
     type: 'warning',
     title: 'Screen Recording Permission Required',
     message: 'Time Tracker needs Screen Recording permission to track your activity.',
-    detail: 'Click "Open System Settings" to grant permission, then restart the app.\n\n' +
-            'In System Settings:\n' +
-            '1. Go to Privacy & Security\n' +
-            '2. Click Screen Recording\n' +
-            '3. Enable Time Tracker',
+    detail: detailMessage +
+            'To grant permission:\n' +
+            '1. Open System Settings\n' +
+            '2. Go to Privacy & Security › Screen Recording\n' +
+            '3. Enable the checkbox next to "Time Tracker" or "Electron"\n' +
+            '4. Restart this application\n\n' +
+            'If the checkbox is already enabled, try:\n' +
+            '- Unchecking and re-checking it\n' +
+            '- Restarting your Mac\n\n' +
+            'Click "Open System Settings" to go there now.',
     buttons: ['Open System Settings', 'Quit'],
     defaultId: 0,
     cancelId: 1
   });
   
   if (response.response === 0) {
-    // Open System Settings to Privacy & Security > Screen Recording
-    shell.openExternal('x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture');
+    console.log('Opening System Settings...');
+    // Open System Settings directly to Screen Recording section
+    // Try multiple URL schemes for compatibility with different macOS versions
+    try {
+      // For macOS Ventura (13.0+)
+      await shell.openExternal('x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture');
+    } catch (error) {
+      console.error('Failed to open with URL scheme:', error);
+      // Fallback for older macOS versions
+      try {
+        await shell.openPath('/System/Library/PreferencePanes/Security.prefPane');
+      } catch (fallbackError) {
+        console.error('Failed to open System Settings:', fallbackError);
+      }
+    }
   }
   
   // Quit the app - user needs to grant permission and restart
+  console.log('Quitting app - permission required');
   app.quit();
   return false;
 }

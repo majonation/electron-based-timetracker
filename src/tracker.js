@@ -117,6 +117,7 @@ async function pollActivity() {
       trackingStartTime = now;
       lastRecordTime = now;
       current = { ...activity, startTime: now };
+      console.log('Tracking initialized. Waiting for activity to accumulate...');
       return; // Don't record anything on the very first poll, just initialize
     }
     
@@ -134,6 +135,9 @@ async function pollActivity() {
     function insertSegment(start, end) {
       if (end <= start) return; // skip zero/negative durations
       
+      const durationSeconds = Math.floor((end - start) / 1000);
+      console.log(`✓ Recorded: ${activity.identifier} (${durationSeconds}s)`);
+      
       db.run(
         'INSERT INTO activities (type, identifier, title, description, full_url, start_time, end_time) VALUES (?, ?, ?, ?, ?, ?, ?)',
         [
@@ -146,7 +150,9 @@ async function pollActivity() {
           end,
         ],
         (err) => {
-          if (err) console.error('Error inserting activity:', err);
+          if (err) {
+            console.error('✗ Database error:', err.message);
+          }
         }
       );
     }
@@ -207,8 +213,11 @@ async function pollActivity() {
 }
 
 function startTracking() {
+  console.log('Starting activity tracking...');
   // Poll every 2 seconds for better accuracy
   pollIntervalId = setInterval(pollActivity, 2000);
+  // Run immediately on start
+  pollActivity();
 }
 
 function stopTracking() {
