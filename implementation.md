@@ -34,6 +34,8 @@
  - [x] Show user-friendly dialog with instructions to grant permission
  - [x] Proactively check and request Screen Recording permission on app startup
  - [x] Open System Settings directly to Screen Recording preferences
+ - [x] Fix permission request to use askForMediaAccess() instead of getMediaAccessStatus()
+ - [x] Ensure app appears in System Settings Screen Recording list
 
 ## Phase 4: Categorization
 
