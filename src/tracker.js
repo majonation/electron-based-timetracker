@@ -5,6 +5,8 @@ const { dialog } = require('electron');
 
 let permissionErrorShown = false;
 let pollIntervalId = null;
+let consecutiveErrors = 0;
+const MAX_CONSECUTIVE_ERRORS = 3;
 
 async function getChromeActiveTab() {
   return new Promise((resolve) => {
@@ -68,6 +70,10 @@ function startOfNextDay(ts) {
 async function pollActivity() {
   try {
     const win = await activeWin();
+    
+    // Reset error counter on successful call
+    consecutiveErrors = 0;
+    
     if (!win) {
       // If no active window, don't record any time but keep tracking
       lastRecordTime = Date.now();
@@ -179,14 +185,18 @@ async function pollActivity() {
     lastRecordTime = now;
     
   } catch (e) {
+    // Increment error counter
+    consecutiveErrors++;
+    
     // Check if this is a permission error
     const errorMessage = e.message || '';
     const isPermissionError = errorMessage.includes('screen recording permission') || 
                               (e.stdout && e.stdout.includes('screen recording permission'));
     
-    if (isPermissionError && !permissionErrorShown) {
+    // Only show dialog and stop tracking after multiple consecutive errors
+    if (isPermissionError && consecutiveErrors >= MAX_CONSECUTIVE_ERRORS && !permissionErrorShown) {
       permissionErrorShown = true;
-      console.error('Screen Recording permission required for active-win');
+      console.error(`Screen Recording permission lost after ${consecutiveErrors} consecutive errors`);
       
       // Stop polling to prevent continuous errors
       if (pollIntervalId) {
@@ -196,18 +206,26 @@ async function pollActivity() {
       
       // Show dialog to user
       dialog.showErrorBox(
-        'Screen Recording Permission Required',
-        'Time Tracker needs Screen Recording permission to track your activity.\n\n' +
-        'Please grant permission in:\n' +
-        'System Settings › Privacy & Security › Screen Recording\n\n' +
-        'Then restart the application.'
+        'Screen Recording Permission Lost',
+        'Time Tracker has lost Screen Recording permission.\n\n' +
+        'This can happen on macOS after the app runs for a while.\n\n' +
+        'To fix this:\n' +
+        '1. Go to System Settings › Privacy & Security › Screen Recording\n' +
+        '2. Uncheck and re-check "Time Tracker" or "Electron"\n' +
+        '3. Restart this application\n\n' +
+        'If the problem persists, try restarting your Mac.'
       );
       
       return;
     }
     
-    // For other errors, log and continue
-    console.error('Error in pollActivity:', e);
+    // For intermittent errors, just log and continue (might be temporary)
+    if (isPermissionError) {
+      console.error(`Permission error (${consecutiveErrors}/${MAX_CONSECUTIVE_ERRORS}):`, errorMessage);
+    } else {
+      console.error('Error in pollActivity:', e);
+    }
+    
     lastRecordTime = Date.now();
   }
 }

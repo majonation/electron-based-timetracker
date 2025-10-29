@@ -29,6 +29,7 @@
  - [x] Fix rounding to avoid undercounting by flooring start and ceiling end to 10s
  - [x] Handle day rollover by splitting intervals that cross midnight
  - [x] Fix timezone issue in date boundary calculations (getDayBoundaries and getDateString)
+ - [x] Fix timezone issue in renderer date display (replaced all UTC date references with local time)
 - [x] Handle Screen Recording permission errors gracefully
  - [x] Detect permission errors from active-win
  - [x] Stop polling when permission is denied
@@ -37,6 +38,7 @@
  - [x] Open System Settings directly to Screen Recording preferences
  - [x] Fix permission request to use askForMediaAccess() instead of getMediaAccessStatus()
  - [x] Ensure app appears in System Settings Screen Recording list
+ - [x] Add error tolerance for intermittent permission losses (retry up to 3 times before stopping)
 
 ## Phase 4: Categorization
 
