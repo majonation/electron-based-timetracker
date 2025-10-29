@@ -30,6 +30,7 @@
  - [x] Handle day rollover by splitting intervals that cross midnight
  - [x] Fix timezone issue in date boundary calculations (getDayBoundaries and getDateString)
  - [x] Fix timezone issue in renderer date display (replaced all UTC date references with local time)
+ - [x] Fix database path to use app.getPath('userData') for packaged apps
 - [x] Handle Screen Recording permission errors gracefully
  - [x] Detect permission errors from active-win
  - [x] Stop polling when permission is denied

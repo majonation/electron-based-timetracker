@@ -1,7 +1,20 @@
 const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
+const { app } = require('electron');
+const fs = require('fs');
 
-const dbPath = path.join(__dirname, '..', 'data', 'timetracker.db');
+// Use app.getPath('userData') for packaged apps, fallback to local data folder for development
+const userDataPath = app.getPath('userData');
+const dbDir = path.join(userDataPath, 'data');
+
+// Ensure the data directory exists
+if (!fs.existsSync(dbDir)) {
+  fs.mkdirSync(dbDir, { recursive: true });
+}
+
+const dbPath = path.join(dbDir, 'timetracker.db');
+console.log('Database path:', dbPath);
+
 const db = new sqlite3.Database(dbPath);
 
 db.serialize(() => {
