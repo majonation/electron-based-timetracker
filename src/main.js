@@ -41,41 +41,17 @@ async function checkScreenRecordingPermission() {
   let status = systemPreferences.getMediaAccessStatus('screen');
   console.log('Initial screen recording permission status:', status);
   
-  // Always attempt to trigger the prompt by accessing screen content
-  // This will trigger the macOS permission dialog ONLY on first run (status: 'not-determined')
-  // After that, user must manually grant permission in System Settings
-  console.log('Attempting to trigger screen recording permission prompt...');
-  
-  const tempWin = new BrowserWindow({
-    show: false,
-    webPreferences: {
-      nodeIntegration: false
-    }
-  });
-  
-  try {
-    // Attempt to get screen sources - this triggers the permission prompt on first run
-    const { desktopCapturer } = require('electron');
-    const sources = await desktopCapturer.getSources({ types: ['screen'] });
-    console.log('desktopCapturer.getSources() completed, found', sources.length, 'sources');
-  } catch (error) {
-    console.log('Screen capture attempt error:', error.message);
-  } finally {
-    tempWin.close();
+  // If status is already granted, give system a moment to initialize before testing
+  if (status === 'granted') {
+    console.log('Permission status is granted, waiting briefly before testing...');
+    await new Promise(resolve => setTimeout(resolve, 500));
   }
   
-  // Give macOS time to show the permission dialog and process user's response
-  console.log('Waiting for permission dialog response...');
-  await new Promise(resolve => setTimeout(resolve, 1500));
-  
-  // Check status again after triggering the prompt
-  status = systemPreferences.getMediaAccessStatus('screen');
-  console.log('Permission status after prompt attempt:', status);
-  
-  // Now test if active-win actually works (the real test)
+  // First, test if active-win actually works (the real test)
   console.log('Testing active-win functionality...');
   const activeWin = require('active-win');
   let activeWinWorks = false;
+  let activeWinError = null;
   
   try {
     const win = await activeWin();
@@ -88,13 +64,64 @@ async function checkScreenRecordingPermission() {
     }
   } catch (error) {
     console.error('active-win test failed:', error.message);
+    activeWinError = error.message;
     activeWinWorks = false;
   }
   
-  // If both status is granted AND active-win works, we're good
+  // If both status is granted AND active-win works, we're good - skip permission prompt
   if (status === 'granted' && activeWinWorks) {
     console.log('Screen recording permission verified and active-win working!');
     return true;
+  }
+  
+  // Log detailed debug info if permission check failed
+  console.log('DEBUG: Permission check failed. Status:', status, '| active-win works:', activeWinWorks, '| Error:', activeWinError);
+  
+  // Only attempt to trigger the prompt if permission is not yet determined
+  if (status === 'not-determined') {
+    console.log('Permission not determined, attempting to trigger permission prompt...');
+    
+    const tempWin = new BrowserWindow({
+      show: false,
+      webPreferences: {
+        nodeIntegration: false
+      }
+    });
+    
+    try {
+      // Attempt to get screen sources - this triggers the permission prompt on first run
+      const { desktopCapturer } = require('electron');
+      const sources = await desktopCapturer.getSources({ types: ['screen'] });
+      console.log('desktopCapturer.getSources() completed, found', sources.length, 'sources');
+    } catch (error) {
+      console.log('Screen capture attempt error:', error.message);
+    } finally {
+      tempWin.close();
+    }
+    
+    // Give macOS time to show the permission dialog and process user's response
+    console.log('Waiting for permission dialog response...');
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // Check status again after triggering the prompt
+    status = systemPreferences.getMediaAccessStatus('screen');
+    console.log('Permission status after prompt attempt:', status);
+    
+    // Re-test active-win after permission prompt
+    try {
+      const win = await activeWin();
+      if (win || win === null) {
+        activeWinWorks = true;
+      }
+    } catch (error) {
+      activeWinWorks = false;
+    }
+    
+    // If permission was granted and active-win works now, we're good
+    if (status === 'granted' && activeWinWorks) {
+      console.log('Screen recording permission granted and active-win working!');
+      return true;
+    }
   }
   
   // Permission not working properly - show dialog and guide user
